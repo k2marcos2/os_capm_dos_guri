@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerenciador de Campeonatos</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="container header-row">
+      <div>
+        <span class="eyebrow">Tournament Manager</span>
+        <h1>Gerenciador de Campeonatos</h1>
+        <p class="muted">Crie campeonatos, personalize regras, premiações, participantes e chaveamentos.</p>
+      </div>
+      <button id="newTournamentBtn" class="btn btn-primary" type="button">+ Criar campeonato</button>
+    </div>
+  </header>
+
+  <main class="container page-space">
+    <!-- DASHBOARD -->
+    <section id="dashboardView">
+      <div class="card dashboard-hero">
+        <div>
+          <span class="eyebrow">Painel</span>
+          <h2>Seus campeonatos</h2>
+          <p class="muted">Os dados ficam salvos neste navegador usando localStorage.</p>
+        </div>
+        <div class="hero-stat">
+          <strong id="tournamentCount">0</strong>
+          <span>campeonatos</span>
+        </div>
+      </div>
+
+      <div id="emptyDashboard" class="card empty-state">
+        <div class="empty-icon">🏆</div>
+        <h2>Nenhum campeonato criado</h2>
+        <p class="muted">Crie seu primeiro campeonato para começar.</p>
+        <button id="emptyCreateBtn" class="btn btn-primary" type="button">Criar primeiro campeonato</button>
+      </div>
+
+      <div id="tournamentGrid" class="tournament-grid"></div>
+    </section>
+
+    <!-- EDITOR -->
+    <section id="editorView" hidden>
+      <div class="editor-top card">
+        <div class="editor-top-left">
+          <button id="backDashboardBtn" class="btn btn-ghost" type="button">← Voltar</button>
+          <div>
+            <span id="statusBadge" class="status-badge status-draft">Rascunho</span>
+            <h2 id="editorTournamentName">Campeonato</h2>
+            <p id="editorTournamentSubtitle" class="muted"></p>
+          </div>
+        </div>
+        <button id="saveCurrentBtn" class="btn btn-primary" type="button">Salvar</button>
+      </div>
+
+      <div class="editor-layout">
+        <nav class="card side-nav" aria-label="Seções do campeonato">
+          <button class="nav-item active" data-tab="overview" type="button">Visão geral</button>
+          <button class="nav-item" data-tab="identity" type="button">Identidade</button>
+          <button class="nav-item" data-tab="format" type="button">Formato</button>
+          <button class="nav-item" data-tab="rules" type="button">Regulamento</button>
+          <button class="nav-item" data-tab="awards" type="button">Premiação</button>
+          <button class="nav-item" data-tab="participants" type="button">Participantes</button>
+          <button class="nav-item" data-tab="bracket" type="button">Chaveamento</button>
+          <button class="nav-item" data-tab="history" type="button">Histórico</button>
+        </nav>
+
+        <div class="content-area">
+          <section id="tab-overview" class="tab-panel active"></section>
+
+          <section id="tab-identity" class="tab-panel">
+            <div class="card section-card">
+              <div class="section-heading">
+                <div>
+                  <span class="eyebrow">Personalização</span>
+                  <h2>Identidade do campeonato</h2>
+                </div>
+              </div>
+
+              <div class="form-grid two-columns">
+                <label class="field">
+                  <span>Nome do campeonato</span>
+                  <input id="nameInput" type="text" maxlength="80">
+                </label>
+
+                <label class="field">
+                  <span>Subtítulo</span>
+                  <input id="subtitleInput" type="text" maxlength="120" placeholder="Ex.: I Campeonato dos Treinadores">
+                </label>
+
+                <label class="field full">
+                  <span>Descrição</span>
+                  <textarea id="descriptionInput" rows="4" placeholder="Descrição geral do campeonato..."></textarea>
+                </label>
+              </div>
+
+              <h3 class="subheading">Títulos exibidos</h3>
+              <p class="muted small">Renomeie as áreas do sistema do jeito que quiser.</p>
+
+              <div class="form-grid two-columns">
+                <label class="field">
+                  <span>Título de participantes</span>
+                  <input id="participantsLabelInput" type="text">
+                </label>
+                <label class="field">
+                  <span>Título do chaveamento</span>
+                  <input id="bracketLabelInput" type="text">
+                </label>
+                <label class="field">
+                  <span>Título do regulamento</span>
+                  <input id="rulesLabelInput" type="text">
+                </label>
+                <label class="field">
+                  <span>Título da premiação</span>
+                  <input id="awardsLabelInput" type="text">
+                </label>
+                <label class="field">
+                  <span>Título do campeão</span>
+                  <input id="championLabelInput" type="text">
+                </label>
+              </div>
+
+              <div class="form-actions">
+                <button id="saveIdentityBtn" class="btn btn-primary" type="button">Salvar identidade</button>
+              </div>
+            </div>
+          </section>
+
+          <section id="tab-format" class="tab-panel">
+            <div class="card section-card">
+              <div class="section-heading">
+                <div>
+                  <span class="eyebrow">Funcionamento</span>
+                  <h2>Formato do campeonato</h2>
+                </div>
+              </div>
+
+              <div id="formatLockedNotice" class="notice warning" hidden>
+                O chaveamento já foi criado. Reinicie o chaveamento para alterar o formato.
+              </div>
+
+              <div class="form-grid two-columns">
+                <label class="field">
+                  <span>Formato</span>
+                  <select id="formatTypeInput">
+                    <option value="pokemon_swiss">Pokémon — Suíço + Top Cut</option>
+                    <option value="single_elimination">Eliminação simples</option>
+                  </select>
+                </label>
+
+                <label class="field">
+                  <span>Ordem das chaves</span>
+                  <select id="drawModeInput">
+                    <option value="random">Sorteio aleatório</option>
+                    <option value="registration">Ordem de cadastro</option>
+                  </select>
+                </label>
+
+                <label id="swissRoundsField" class="field">
+                  <span>Rodadas suíças</span>
+                  <select id="swissRoundsInput">
+                    <option value="auto">Automático (recomendado)</option>
+                    <option value="2">2 rodadas</option>
+                    <option value="3">3 rodadas</option>
+                    <option value="4">4 rodadas</option>
+                    <option value="5">5 rodadas</option>
+                    <option value="6">6 rodadas</option>
+                    <option value="7">7 rodadas</option>
+                    <option value="8">8 rodadas</option>
+                  </select>
+                </label>
+
+                <label id="topCutField" class="field">
+                  <span>Classificados para o Top Cut</span>
+                  <select id="topCutSizeInput">
+                    <option value="auto">Automático (recomendado)</option>
+                    <option value="2">Top 2</option>
+                    <option value="4">Top 4</option>
+                    <option value="8">Top 8</option>
+                    <option value="16">Top 16</option>
+                  </select>
+                </label>
+
+                <label class="field">
+                  <span>Confrontos</span>
+                  <select id="bestOfInput">
+                    <option value="1">BO1 — Melhor de 1</option>
+                    <option value="3">BO3 — Melhor de 3</option>
+                    <option value="5">BO5 — Melhor de 5</option>
+                    <option value="7">BO7 — Melhor de 7</option>
+                  </select>
+                </label>
+
+                <label class="field">
+                  <span>Final</span>
+                  <select id="finalBestOfInput">
+                    <option value="1">BO1 — Melhor de 1</option>
+                    <option value="3">BO3 — Melhor de 3</option>
+                    <option value="5">BO5 — Melhor de 5</option>
+                    <option value="7">BO7 — Melhor de 7</option>
+                  </select>
+                </label>
+
+                <label class="switch-field full">
+                  <input id="thirdPlaceInput" type="checkbox">
+                  <span>
+                    <strong>Disputa de terceiro lugar</strong>
+                    <small>Cria uma partida entre os derrotados das semifinais.</small>
+                  </span>
+                </label>
+              </div>
+
+              <div id="pokemonFormatNotice" class="notice pokemon-notice">
+                <strong>Formato competitivo Pokémon:</strong> todos jogam as rodadas suíças. Vitória vale 3 pontos, empate vale 1 e derrota vale 0. Os melhores avançam ao Top Cut em eliminação simples.
+              </div>
+
+              <div class="form-actions">
+                <button id="saveFormatBtn" class="btn btn-primary" type="button">Salvar formato</button>
+              </div>
+            </div>
+          </section>
+
+          <section id="tab-rules" class="tab-panel">
+            <div class="card section-card">
+              <div class="section-heading">
+                <div>
+                  <span class="eyebrow">Conteúdo livre</span>
+                  <h2 id="rulesPageTitle">Regulamento</h2>
+                  <p class="muted">Crie quantas seções quiser, com qualquer título e conteúdo.</p>
+                </div>
+              </div>
+
+              <form id="ruleForm" class="editor-box">
+                <input id="ruleEditId" type="hidden">
+                <div class="form-grid">
+                  <label class="field">
+                    <span>Título da seção</span>
+                    <input id="ruleTitleInput" type="text" maxlength="100" placeholder="Ex.: Itens proibidos">
+                  </label>
+                  <label class="field">
+                    <span>Conteúdo</span>
+                    <textarea id="ruleContentInput" rows="7" placeholder="Escreva a regra ou seção..."></textarea>
+                  </label>
+                </div>
+                <div class="form-actions">
+                  <button id="cancelRuleEditBtn" class="btn btn-ghost" type="button" hidden>Cancelar edição</button>
+                  <button class="btn btn-primary" type="submit">Salvar seção</button>
+                </div>
+              </form>
+
+              <div id="rulesList" class="sortable-list"></div>
+            </div>
+          </section>
+
+          <section id="tab-awards" class="tab-panel">
+            <div class="card section-card">
+              <div class="section-heading">
+                <div>
+                  <span class="eyebrow">Prêmios</span>
+                  <h2 id="awardsPageTitle">Premiação</h2>
+                  <p class="muted">Pode ser 1º lugar, MVP, melhor equipe ou qualquer categoria.</p>
+                </div>
+              </div>
+
+              <form id="awardForm" class="editor-box">
+                <input id="awardEditId" type="hidden">
+                <div class="form-grid">
+                  <label class="field">
+                    <span>Título da premiação</span>
+                    <input id="awardTitleInput" type="text" maxlength="100" placeholder="Ex.: 🥇 1º Lugar">
+                  </label>
+                  <label class="field">
+                    <span>Prêmio / descrição</span>
+                    <textarea id="awardDescriptionInput" rows="5" placeholder="Ex.: R$ 100 + Troféu + item especial"></textarea>
+                  </label>
+                </div>
+                <div class="form-actions">
+                  <button id="cancelAwardEditBtn" class="btn btn-ghost" type="button" hidden>Cancelar edição</button>
+                  <button class="btn btn-primary" type="submit">Salvar premiação</button>
+                </div>
+              </form>
+
+              <div id="awardsList" class="award-grid"></div>
+            </div>
+          </section>
+
+          <section id="tab-participants" class="tab-panel">
+            <div class="card section-card">
+              <div class="section-heading">
+                <div>
+                  <span class="eyebrow">Inscrições</span>
+                  <h2 id="participantsPageTitle">Participantes</h2>
+                  <p class="muted">Cadastre os competidores antes de gerar as chaves.</p>
+                </div>
+                <span class="count-pill"><strong id="participantsCount">0</strong> cadastrados</span>
+              </div>
+
+              <div id="participantsLockedNotice" class="notice warning" hidden>
+                O chaveamento já foi iniciado. Reinicie-o para editar participantes.
+              </div>
+
+              <form id="participantForm" class="editor-box compact-editor">
+                <input id="participantEditId" type="hidden">
+                <div class="form-grid two-columns">
+                  <label class="field">
+                    <span>Nome</span>
+                    <input id="participantNameInput" type="text" maxlength="60" placeholder="Nome do participante">
+                  </label>
+                  <label class="field">
+                    <span>Observação (opcional)</span>
+                    <input id="participantNoteInput" type="text" maxlength="120" placeholder="Equipe, apelido, Discord etc.">
+                  </label>
+                </div>
+                <div class="form-actions">
+                  <button id="cancelParticipantEditBtn" class="btn btn-ghost" type="button" hidden>Cancelar edição</button>
+                  <button id="participantSubmitBtn" class="btn btn-primary" type="submit">Salvar participante</button>
+                </div>
+              </form>
+
+              <div id="participantsList" class="participant-list"></div>
+            </div>
+          </section>
+
+          <section id="tab-bracket" class="tab-panel">
+            <div class="card section-card">
+              <div class="section-heading bracket-heading">
+                <div>
+                  <span id="bracketEyebrow" class="eyebrow">Pokémon competitivo</span>
+                  <h2 id="bracketPageTitle">Chaveamento</h2>
+                  <p id="bracketHelp" class="muted">Cadastre pelo menos 2 participantes.</p>
+                </div>
+                <div class="toolbar">
+                  <button id="startTournamentBtn" class="btn btn-primary" type="button">🎲 Gerar chaveamento</button>
+                  <button id="nextSwissRoundBtn" class="btn btn-primary" type="button" hidden>Próxima rodada suíça</button>
+                  <button id="startTopCutBtn" class="btn btn-primary" type="button" hidden>Gerar Top Cut</button>
+                  <button id="resetTournamentBtn" class="btn btn-danger" type="button" hidden>Reiniciar chaveamento</button>
+                </div>
+              </div>
+
+              <div id="bracketContainer" class="bracket-wrap"></div>
+              <div id="thirdPlaceContainer"></div>
+              <div id="championCard" class="champion-card" hidden></div>
+            </div>
+          </section>
+
+          <section id="tab-history" class="tab-panel">
+            <div class="card section-card">
+              <div class="section-heading">
+                <div>
+                  <span class="eyebrow">Resultados</span>
+                  <h2>Histórico</h2>
+                  <p class="muted">Confrontos concluídos no chaveamento atual.</p>
+                </div>
+              </div>
+              <div id="historyList" class="history-list"></div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
